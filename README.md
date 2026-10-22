@@ -15,7 +15,8 @@ Simulador mobile-first para comparar **consórcio** e **financiamento**.
 src/
 ├── core/          # Regras de negócio em TypeScript puro (sem React)
 │   ├── domain/    # Entidades e tipos
-│   └── use-cases/ # Cálculos (consórcio, financiamento, comparação)
+│   ├── use-cases/ # Cálculos (consórcio, financiamento, comparação)
+│   └── index.ts   # API pública do core
 ├── ui/            # Componentes React
 └── shared/        # Utilitários (formatadores BRL / %)
 ```

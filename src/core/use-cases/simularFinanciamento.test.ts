@@ -1,0 +1,79 @@
+import { describe, expect, it } from 'vitest'
+import { simularFinanciamento, taxaMensalEquivalente } from './simularFinanciamento'
+
+// 1% a.m. equivale a (1,01^12 - 1) a.a.
+const taxaAnual1PorCentoAoMes = Math.pow(1.01, 12) - 1
+
+describe('taxaMensalEquivalente', () => {
+  it('converte taxa anual em mensal composta', () => {
+    expect(taxaMensalEquivalente(taxaAnual1PorCentoAoMes)).toBeCloseTo(0.01, 12)
+    expect(taxaMensalEquivalente(0)).toBe(0)
+  })
+})
+
+describe('simularFinanciamento Price', () => {
+  const r = simularFinanciamento({
+    valorFinanciado: 10_000_000,
+    prazoMeses: 12,
+    taxaJurosAnual: taxaAnual1PorCentoAoMes,
+    sistema: 'price',
+  })
+
+  it('calcula a parcela fixa (R$ 100.000, 12x, 1% a.m. = R$ 8.884,88)', () => {
+    expect(r.primeiraParcela).toBe(888_488)
+    expect(r.parcelas.slice(0, -1).every((p) => p.valor === 888_488)).toBe(true)
+  })
+
+  it('quita o saldo devedor na última parcela', () => {
+    expect(r.parcelas.at(-1)?.saldoDevedor).toBe(0)
+    // O arredondamento mensal dos juros acumula no máximo ~1 centavo por mês.
+    expect(Math.abs(r.ultimaParcela - 888_488)).toBeLessThan(12)
+    expect(r.totalJuros).toBe(r.totalPago - 10_000_000)
+  })
+})
+
+describe('simularFinanciamento SAC', () => {
+  const r = simularFinanciamento({
+    valorFinanciado: 12_000_000,
+    prazoMeses: 12,
+    taxaJurosAnual: taxaAnual1PorCentoAoMes,
+    sistema: 'sac',
+  })
+
+  it('amortiza valor constante com parcelas decrescentes', () => {
+    expect(r.parcelas.every((p) => p.amortizacao === 1_000_000)).toBe(true)
+    expect(r.primeiraParcela).toBe(1_120_000)
+    expect(r.ultimaParcela).toBe(1_010_000)
+  })
+
+  it('soma os juros sobre o saldo devedor (R$ 7.800,00)', () => {
+    expect(r.totalJuros).toBe(780_000)
+    expect(r.parcelas.at(-1)?.saldoDevedor).toBe(0)
+  })
+})
+
+describe('simularFinanciamento sem juros', () => {
+  it.each(['price', 'sac'] as const)('%s divide o valor pelo prazo', (sistema) => {
+    const r = simularFinanciamento({
+      valorFinanciado: 100_000,
+      prazoMeses: 3,
+      taxaJurosAnual: 0,
+      sistema,
+    })
+    expect(r.totalJuros).toBe(0)
+    expect(r.totalPago).toBe(100_000)
+  })
+})
+
+describe('simularFinanciamento validações', () => {
+  it('rejeita valor financiado zero', () => {
+    expect(() =>
+      simularFinanciamento({
+        valorFinanciado: 0,
+        prazoMeses: 12,
+        taxaJurosAnual: 0.1,
+        sistema: 'price',
+      }),
+    ).toThrow(expect.objectContaining({ field: 'valorFinanciado' }))
+  })
+})
