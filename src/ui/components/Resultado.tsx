@@ -30,6 +30,8 @@ export function Resultado({ resultado }: { resultado: Sucesso }) {
     { rotulo: 'Última parcela', valor: formatBRL(financiamento.ultimaParcela) },
     { rotulo: 'Total pago', valor: formatBRL(financiamento.totalPago) },
     { rotulo: 'Juros', valor: formatBRL(financiamento.totalJuros) },
+    { rotulo: 'IOF', valor: formatBRL(financiamento.iof) },
+    { rotulo: 'Juros + IOF', valor: formatBRL(financiamento.custoTotal) },
   ]
 
   return (
@@ -47,8 +49,8 @@ export function Resultado({ resultado }: { resultado: Sucesso }) {
         </p>
         <p className="text-texto">
           {economiza
-            ? `O consórcio custa ${formatPercent(comparativo.economiaPercentual)} menos que os juros do financiamento.`
-            : 'Nesse cenário, os juros do financiamento ficam abaixo das taxas do consórcio.'}
+            ? `O consórcio custa ${formatPercent(comparativo.economiaPercentual)} menos que os juros e o IOF do financiamento.`
+            : 'Nesse cenário, os juros e o IOF do financiamento ficam abaixo das taxas do consórcio.'}
         </p>
       </section>
       <div className="grid gap-4 sm:grid-cols-2">

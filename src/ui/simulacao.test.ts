@@ -23,6 +23,16 @@ describe('simular', () => {
     expect(r.financiamento.valorFinanciado).toBe(30_000_000)
   })
 
+  it('cobra IOF por padrão e permite isentar', () => {
+    const comIof = simular(FORMULARIO_INICIAL)
+    const isento = simular({ ...FORMULARIO_INICIAL, iof: 'isento' })
+    if (!comIof.ok || !isento.ok) throw new Error('simulação inválida')
+
+    expect(comIof.financiamento.iof).toBeGreaterThan(0)
+    expect(isento.financiamento.iof).toBe(0)
+    expect(comIof.comparativo.economia - isento.comparativo.economia).toBe(comIof.financiamento.iof)
+  })
+
   it('aceita valores no formato brasileiro', () => {
     const r = simular({ ...FORMULARIO_INICIAL, valorCarta: '150.000,50' })
     expect(r.ok && r.consorcio.valorCarta).toBe(15_000_050)

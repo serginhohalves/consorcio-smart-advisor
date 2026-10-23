@@ -5,7 +5,7 @@ import type { Cents } from '../domain/money'
 export interface Comparativo {
   /** Taxa de administração + fundo de reserva pagos no consórcio. */
   custoConsorcio: Cents
-  /** Juros pagos no financiamento. */
+  /** Juros + IOF pagos no financiamento. */
   custoFinanciamento: Cents
   /** Quanto o consórcio custa a menos (negativo se o financiamento for mais barato). */
   economia: Cents
@@ -25,7 +25,7 @@ export function compararSimulacoes(
   financiamento: FinanciamentoResultado,
 ): Comparativo {
   const custoConsorcio = consorcio.custoTotal
-  const custoFinanciamento = financiamento.totalJuros
+  const custoFinanciamento = financiamento.custoTotal
   const economia = custoFinanciamento - custoConsorcio
 
   return {

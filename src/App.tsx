@@ -40,8 +40,8 @@ function App() {
         </div>
       </div>
       <footer className="max-w-prose text-xs text-suave">
-        Não considera reajuste da carta (INCC/IPCA), seguros, TR nem IOF do financiamento. A taxa de
-        juros é efetiva anual, convertida para a mensal equivalente.
+        Não considera reajuste da carta (INCC/IPCA), seguros nem TR. A taxa de juros é efetiva
+        anual, convertida para a mensal equivalente. O IOF é considerado pago na contratação.
       </footer>
     </main>
   )
