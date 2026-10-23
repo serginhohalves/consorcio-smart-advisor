@@ -1,5 +1,6 @@
 import {
   compararSimulacoes,
+  IOF_PESSOA_FISICA,
   simularConsorcio,
   simularFinanciamento,
   toCents,
@@ -23,6 +24,7 @@ export interface FormularioSimulacao {
   abatimento: AbatimentoLance
   taxaJurosAnual: string
   sistema: SistemaAmortizacao
+  iof: 'cobrar' | 'isento'
 }
 
 export type CampoFormulario = keyof FormularioSimulacao
@@ -37,6 +39,7 @@ export const FORMULARIO_INICIAL: FormularioSimulacao = {
   abatimento: 'parcela',
   taxaJurosAnual: '10,5',
   sistema: 'price',
+  iof: 'cobrar',
 }
 
 export type ResultadoSimulacao =
@@ -70,6 +73,7 @@ const MENSAGENS: Record<CampoFormulario, string> = {
   abatimento: 'Escolha se o lance reduz a parcela ou o prazo.',
   taxaJurosAnual: 'Informe uma taxa de juros válida.',
   sistema: 'Escolha Price ou SAC.',
+  iof: 'Escolha se o financiamento paga IOF.',
 }
 
 /**
@@ -106,6 +110,7 @@ export function simular(form: FormularioSimulacao): ResultadoSimulacao {
       prazoMeses,
       taxaJurosAnual: percentual('taxaJurosAnual'),
       sistema: form.sistema,
+      iof: form.iof === 'cobrar' ? IOF_PESSOA_FISICA : undefined,
     })
 
     return {

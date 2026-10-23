@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { IOF_PESSOA_FISICA } from '../domain/financiamento'
 import { compararSimulacoes } from './compararSimulacoes'
 import { simularConsorcio } from './simularConsorcio'
 import { simularFinanciamento } from './simularFinanciamento'
@@ -21,10 +22,25 @@ describe('compararSimulacoes', () => {
 
     expect(c.custoConsorcio).toBe(1_500_000)
     expect(c.custoFinanciamento).toBe(financiamento.totalJuros)
+    expect(financiamento.iof).toBe(0)
     expect(c.economia).toBe(financiamento.totalJuros - 1_500_000)
     expect(c.economia).toBeGreaterThan(0)
     expect(c.economiaPercentual).toBeCloseTo(c.economia / financiamento.totalJuros)
     expect(c.diferencaParcelaInicial).toBe(financiamento.primeiraParcela - 115_000)
+  })
+
+  it('soma o IOF ao custo do financiamento', () => {
+    const financiamento = simularFinanciamento({
+      valorFinanciado: 10_000_000,
+      prazoMeses: 100,
+      taxaJurosAnual: 0.12,
+      sistema: 'price',
+      iof: IOF_PESSOA_FISICA,
+    })
+    const c = compararSimulacoes(consorcio, financiamento)
+
+    expect(financiamento.iof).toBeGreaterThan(0)
+    expect(c.custoFinanciamento).toBe(financiamento.totalJuros + financiamento.iof)
   })
 
   it('indica economia negativa quando o financiamento é mais barato', () => {

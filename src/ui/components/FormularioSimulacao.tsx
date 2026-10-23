@@ -131,6 +131,22 @@ export function FormularioSimulacao({ form, aoMudar, erro }: FormularioSimulacao
             { valor: 'sac', rotulo: 'SAC' },
           ]}
         />
+        <div className="grid gap-1">
+          <Segmentado
+            nome="iof"
+            rotulo="IOF"
+            valor={form.iof}
+            aoMudar={(v) => aoMudar('iof', v)}
+            opcoes={[
+              { valor: 'cobrar', rotulo: 'Cobrar' },
+              { valor: 'isento', rotulo: 'Isento' },
+            ]}
+          />
+          <p className="text-xs text-suave">
+            0,38% + 0,0082% ao dia (até 365 dias). Financiamento habitacional de pessoa física é
+            isento.
+          </p>
+        </div>
       </Grupo>
     </form>
   )

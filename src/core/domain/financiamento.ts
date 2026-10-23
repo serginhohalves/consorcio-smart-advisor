@@ -8,7 +8,22 @@ export interface FinanciamentoInput {
   /** Taxa de juros efetiva anual, como fração (ex.: 0,12 = 12% a.a.). */
   taxaJurosAnual: number
   sistema: SistemaAmortizacao
+  /** Alíquotas de IOF. Omitido = isento (ex.: financiamento habitacional de pessoa física). */
+  iof?: AliquotasIof
 }
+
+export interface AliquotasIof {
+  /** Alíquota adicional, cobrada uma vez sobre o valor financiado. */
+  fixa: number
+  /** Alíquota por dia, sobre cada amortização, contada até o vencimento da parcela. */
+  diaria: number
+}
+
+/** IOF de operações de crédito para pessoa física. */
+export const IOF_PESSOA_FISICA: AliquotasIof = { fixa: 0.0038, diaria: 0.000082 }
+
+/** Teto de dias para a parcela diária do IOF. */
+export const IOF_DIAS_MAXIMO = 365
 
 export interface ParcelaFinanciamento {
   numero: number
@@ -28,4 +43,8 @@ export interface FinanciamentoResultado {
   ultimaParcela: Cents
   totalPago: Cents
   totalJuros: Cents
+  /** IOF cobrado na contratação (0 se isento). */
+  iof: Cents
+  /** Custo do crédito: juros + IOF. */
+  custoTotal: Cents
 }
