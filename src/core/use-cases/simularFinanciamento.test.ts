@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { IOF_PESSOA_FISICA } from '../domain/financiamento'
-import { simularFinanciamento, taxaMensalEquivalente } from './simularFinanciamento'
+import { calcularIof, simularFinanciamento, taxaMensalEquivalente } from './simularFinanciamento'
 
 // 1% a.m. equivale a (1,01^12 - 1) a.a.
 const taxaAnual1PorCentoAoMes = Math.pow(1.01, 12) - 1
@@ -79,36 +79,67 @@ describe('simularFinanciamento validações', () => {
   })
 })
 
-describe('IOF', () => {
+describe('calcularIof', () => {
+  // Cronograma SAC de R$ 120.000 em 12x: amortização de R$ 10.000 por mês.
+  const sac12 = simularFinanciamento({
+    valorFinanciado: 12_000_000,
+    prazoMeses: 12,
+    taxaJurosAnual: taxaAnual1PorCentoAoMes,
+    sistema: 'sac',
+  })
+
+  it('soma a alíquota fixa e a diária sobre cada amortização', () => {
+    // Fixa: 0,38% de R$ 120.000 = R$ 456,00.
+    // Diária: R$ 10.000 x 0,0082% x (30 + 60 + ... + 360 = 2.340 dias) = R$ 1.918,80.
+    expect(calcularIof(12_000_000, sac12.parcelas, IOF_PESSOA_FISICA)).toBe(45_600 + 191_880)
+  })
+
+  it('limita a parte diária a 365 dias', () => {
+    // 24 x R$ 5.000: meses 1 a 12 somam 2.340 dias; meses 13 a 24 ficam no teto (12 x 365).
+    const sac24 = simularFinanciamento({
+      valorFinanciado: 12_000_000,
+      prazoMeses: 24,
+      taxaJurosAnual: 0,
+      sistema: 'sac',
+    })
+    const diaria = 500_000 * 0.000082 * (2_340 + 12 * 365)
+    expect(calcularIof(12_000_000, sac24.parcelas, IOF_PESSOA_FISICA)).toBe(
+      Math.round(45_600 + diaria),
+    )
+  })
+})
+
+describe('simularFinanciamento com IOF financiado', () => {
   const base = {
+    valorFinanciado: 12_000_000,
     prazoMeses: 12,
     taxaJurosAnual: taxaAnual1PorCentoAoMes,
     sistema: 'sac' as const,
   }
 
-  it('é zero quando o financiamento é isento', () => {
-    const r = simularFinanciamento({ ...base, valorFinanciado: 12_000_000 })
+  it('não cobra IOF quando isento', () => {
+    const r = simularFinanciamento(base)
     expect(r.iof).toBe(0)
+    expect(r.valorTotalFinanciado).toBe(r.valorFinanciado)
     expect(r.custoTotal).toBe(r.totalJuros)
   })
 
-  it('soma a alíquota fixa e a diária sobre cada amortização', () => {
-    // Fixa: 0,38% de R$ 120.000 = R$ 456,00.
-    // Diária: R$ 10.000 por mês x 0,0082% x (30 + 60 + ... + 360 = 2.340 dias) = R$ 1.918,80.
-    const r = simularFinanciamento({ ...base, valorFinanciado: 12_000_000, iof: IOF_PESSOA_FISICA })
-    expect(r.iof).toBe(45_600 + 191_880)
-    expect(r.custoTotal).toBe(r.totalJuros + r.iof)
+  it('soma o IOF ao principal das parcelas', () => {
+    const r = simularFinanciamento({ ...base, iof: IOF_PESSOA_FISICA })
+    expect(r.valorTotalFinanciado).toBe(12_000_000 + r.iof)
+    expect(r.parcelas.reduce((acc, p) => acc + p.amortizacao, 0)).toBe(r.valorTotalFinanciado)
   })
 
-  it('limita a parte diária a 365 dias', () => {
-    // 24 x R$ 5.000: meses 1 a 12 somam 2.340 dias; meses 13 a 24 ficam no teto (12 x 365).
-    const r = simularFinanciamento({
-      ...base,
-      prazoMeses: 24,
-      valorFinanciado: 12_000_000,
-      iof: IOF_PESSOA_FISICA,
-    })
-    const diaria = 500_000 * 0.000082 * (2_340 + 12 * 365)
-    expect(r.iof).toBe(Math.round(45_600 + diaria))
+  it('calcula o IOF sobre o total financiado, incluindo o próprio IOF', () => {
+    const r = simularFinanciamento({ ...base, iof: IOF_PESSOA_FISICA })
+    // Maior que o IOF só sobre o valor liberado (R$ 2.374,80).
+    expect(r.iof).toBeGreaterThan(237_480)
+    expect(calcularIof(r.valorTotalFinanciado, r.parcelas, IOF_PESSOA_FISICA)).toBe(r.iof)
+  })
+
+  it('custo total = juros sobre o total financiado + IOF', () => {
+    const r = simularFinanciamento({ ...base, iof: IOF_PESSOA_FISICA })
+    expect(r.custoTotal).toBe(r.totalJuros + r.iof)
+    expect(r.custoTotal).toBe(r.totalPago - 12_000_000)
   })
 })

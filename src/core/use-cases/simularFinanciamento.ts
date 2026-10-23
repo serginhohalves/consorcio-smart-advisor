@@ -5,6 +5,7 @@ import type {
   FinanciamentoInput,
   FinanciamentoResultado,
   ParcelaFinanciamento,
+  SistemaAmortizacao,
 } from '../domain/financiamento'
 import type { Cents } from '../domain/money'
 
@@ -16,7 +17,8 @@ export function taxaMensalEquivalente(taxaAnual: number): number {
 /**
  * Simula um financiamento pela Tabela Price (parcelas fixas) ou pelo SAC
  * (amortização constante). Juros arredondados ao centavo mês a mês; a última
- * parcela quita exatamente o saldo devedor.
+ * parcela quita exatamente o saldo devedor. Quando há IOF, ele é financiado:
+ * somado ao valor liberado, com o cálculo refeito até o IOF estabilizar.
  */
 export function simularFinanciamento(input: FinanciamentoInput): FinanciamentoResultado {
   const { valorFinanciado, prazoMeses, taxaJurosAnual, sistema, iof: aliquotasIof } = input
@@ -26,27 +28,28 @@ export function simularFinanciamento(input: FinanciamentoInput): FinanciamentoRe
   assertFractionInRange('taxaJurosAnual', taxaJurosAnual, 0, 10)
 
   const taxaJurosMensal = taxaMensalEquivalente(taxaJurosAnual)
-  const amortizacaoPara =
-    sistema === 'price'
-      ? amortizacaoPrice(valorFinanciado, prazoMeses, taxaJurosMensal)
-      : amortizacaoSac(valorFinanciado, prazoMeses)
+  const gerar = (principal: Cents) => gerarParcelas(principal, prazoMeses, taxaJurosMensal, sistema)
 
-  const parcelas: ParcelaFinanciamento[] = []
-  let saldo = valorFinanciado
+  let iof = 0
+  let parcelas = gerar(valorFinanciado)
 
-  for (let numero = 1; numero <= prazoMeses; numero++) {
-    const juros = Math.round(saldo * taxaJurosMensal)
-    const amortizacao = numero === prazoMeses ? saldo : Math.min(amortizacaoPara(juros), saldo)
-    saldo -= amortizacao
-    parcelas.push({ numero, valor: juros + amortizacao, juros, amortizacao, saldoDevedor: saldo })
+  if (aliquotasIof) {
+    // O IOF incide sobre o total financiado, que inclui o próprio IOF: ponto fixo.
+    for (let i = 0; i < MAX_ITERACOES_IOF; i++) {
+      const proximo = calcularIof(valorFinanciado + iof, parcelas, aliquotasIof)
+      if (proximo === iof) break
+      iof = proximo
+      parcelas = gerar(valorFinanciado + iof)
+    }
   }
 
+  const valorTotalFinanciado = valorFinanciado + iof
   const totalPago = parcelas.reduce((acc, p) => acc + p.valor, 0)
-  const totalJuros = totalPago - valorFinanciado
-  const iof = aliquotasIof ? calcularIof(valorFinanciado, parcelas, aliquotasIof) : 0
+  const totalJuros = totalPago - valorTotalFinanciado
 
   return {
     valorFinanciado,
+    valorTotalFinanciado,
     sistema,
     taxaJurosMensal,
     parcelas,
@@ -55,14 +58,40 @@ export function simularFinanciamento(input: FinanciamentoInput): FinanciamentoRe
     totalPago,
     totalJuros,
     iof,
-    custoTotal: totalJuros + iof,
+    custoTotal: totalPago - valorFinanciado,
   }
+}
+
+/** O IOF converge em poucas iterações; o limite só protege contra oscilação de arredondamento. */
+const MAX_ITERACOES_IOF = 20
+
+function gerarParcelas(
+  principal: Cents,
+  prazoMeses: number,
+  taxaJurosMensal: number,
+  sistema: SistemaAmortizacao,
+): ParcelaFinanciamento[] {
+  const amortizacaoPara =
+    sistema === 'price'
+      ? amortizacaoPrice(principal, prazoMeses, taxaJurosMensal)
+      : amortizacaoSac(principal, prazoMeses)
+
+  const parcelas: ParcelaFinanciamento[] = []
+  let saldo = principal
+
+  for (let numero = 1; numero <= prazoMeses; numero++) {
+    const juros = Math.round(saldo * taxaJurosMensal)
+    const amortizacao = numero === prazoMeses ? saldo : Math.min(amortizacaoPara(juros), saldo)
+    saldo -= amortizacao
+    parcelas.push({ numero, valor: juros + amortizacao, juros, amortizacao, saldoDevedor: saldo })
+  }
+
+  return parcelas
 }
 
 /**
  * IOF de crédito: alíquota fixa sobre o valor financiado mais a alíquota diária sobre
  * cada amortização, pelos dias até o vencimento (meses de 30 dias, teto de 365 dias).
- * O IOF é tratado como pago na contratação, sem ser financiado.
  */
 export function calcularIof(
   valorFinanciado: Cents,
