@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-/* Paleta: azul institucional sobre neutros levemente azulados; verde/vermelho só para o veredito. */
+/* Paleta: azul institucional sobre neutros levemente azulados; verde/âmbar/vermelho só para vereditos. */
 :root {
   --fundo: #f3f5f7;
   --superficie: #ffffff;
@@ -13,6 +13,8 @@
   --positivo-suave: #e3f3ea;
   --negativo: #b3362d;
   --negativo-suave: #f8e6e4;
+  --atencao: #a86a0a;
+  --atencao-suave: #f8eedb;
   color-scheme: light;
 }
 
@@ -29,6 +31,8 @@
     --positivo-suave: #15301f;
     --negativo: #f0857b;
     --negativo-suave: #3a1c1a;
+    --atencao: #e9b45a;
+    --atencao-suave: #3a2c14;
     color-scheme: dark;
   }
 }
@@ -45,6 +49,8 @@
   --color-positivo-suave: var(--positivo-suave);
   --color-negativo: var(--negativo);
   --color-negativo-suave: var(--negativo-suave);
+  --color-atencao: var(--atencao);
+  --color-atencao-suave: var(--atencao-suave);
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   --font-display: 'Fraunces', Georgia, serif;
