@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react'
 import { CustoHesitacao } from './ui/components/CustoHesitacao'
 import { FormularioSimulacao } from './ui/components/FormularioSimulacao'
 import { Resultado } from './ui/components/Resultado'
+import { TermometroPerfil } from './ui/components/TermometroPerfil'
 import {
   HESITACAO_INICIAL,
   simularHesitacao,
   type CampoHesitacao,
   type FormularioHesitacao,
 } from './ui/hesitacao'
+import { PERFIL_INICIAL, simularPerfil, type FormularioPerfil } from './ui/perfil'
 import {
   FORMULARIO_INICIAL,
   simular,
@@ -34,6 +36,14 @@ function App() {
   const aoMudarHesitacao = (campo: CampoHesitacao, valor: string) =>
     setFormHesitacao((atual) => ({ ...atual, [campo]: valor }))
 
+  const [formPerfil, setFormPerfil] = useState<FormularioPerfil>(PERFIL_INICIAL)
+  const resultadoPerfil = useMemo(
+    () => (ultimoValido ? simularPerfil(formPerfil, ultimoValido) : null),
+    [formPerfil, ultimoValido],
+  )
+  const aoMudarPerfil = <C extends keyof FormularioPerfil>(campo: C, valor: FormularioPerfil[C]) =>
+    setFormPerfil((atual) => ({ ...atual, [campo]: valor }))
+
   const aoMudar = <C extends CampoFormulario>(campo: C, valor: Formulario[C]) =>
     setForm((atual) => ({ ...atual, [campo]: valor }))
 
@@ -58,6 +68,13 @@ function App() {
           <div aria-live="polite" className={resultado.ok ? '' : 'opacity-50'}>
             {ultimoValido && <Resultado resultado={ultimoValido} />}
           </div>
+          {resultadoPerfil && (
+            <TermometroPerfil
+              form={formPerfil}
+              aoMudar={aoMudarPerfil}
+              resultado={resultadoPerfil}
+            />
+          )}
           {resultadoHesitacao && (
             <CustoHesitacao
               form={formHesitacao}
