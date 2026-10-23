@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react'
+import { CustoHesitacao } from './ui/components/CustoHesitacao'
 import { FormularioSimulacao } from './ui/components/FormularioSimulacao'
 import { Resultado } from './ui/components/Resultado'
+import {
+  HESITACAO_INICIAL,
+  simularHesitacao,
+  type CampoHesitacao,
+  type FormularioHesitacao,
+} from './ui/hesitacao'
 import {
   FORMULARIO_INICIAL,
   simular,
@@ -14,6 +21,18 @@ function App() {
   // Mantém o último resultado válido na tela enquanto o usuário corrige um campo.
   const [ultimoValido, setUltimoValido] = useState(resultado.ok ? resultado : null)
   if (resultado.ok && resultado !== ultimoValido) setUltimoValido(resultado)
+
+  const [formHesitacao, setFormHesitacao] = useState<FormularioHesitacao>(HESITACAO_INICIAL)
+  const recursosProprios = ultimoValido?.entrada ?? 0
+  const resultadoHesitacao = useMemo(
+    () =>
+      ultimoValido
+        ? simularHesitacao(formHesitacao, ultimoValido.consorcio.valorCarta, recursosProprios)
+        : null,
+    [formHesitacao, ultimoValido, recursosProprios],
+  )
+  const aoMudarHesitacao = (campo: CampoHesitacao, valor: string) =>
+    setFormHesitacao((atual) => ({ ...atual, [campo]: valor }))
 
   const aoMudar = <C extends CampoFormulario>(campo: C, valor: Formulario[C]) =>
     setForm((atual) => ({ ...atual, [campo]: valor }))
@@ -35,13 +54,23 @@ function App() {
           aoMudar={aoMudar}
           erro={resultado.ok ? undefined : resultado}
         />
-        <div aria-live="polite" className={resultado.ok ? '' : 'opacity-50'}>
-          {ultimoValido && <Resultado resultado={ultimoValido} />}
+        <div className="grid gap-6">
+          <div aria-live="polite" className={resultado.ok ? '' : 'opacity-50'}>
+            {ultimoValido && <Resultado resultado={ultimoValido} />}
+          </div>
+          {resultadoHesitacao && (
+            <CustoHesitacao
+              form={formHesitacao}
+              aoMudar={aoMudarHesitacao}
+              resultado={resultadoHesitacao}
+              recursosProprios={recursosProprios}
+            />
+          )}
         </div>
       </div>
       <footer className="max-w-prose text-xs text-suave">
-        Não considera reajuste da carta (INCC/IPCA), seguros nem TR. A taxa de juros é efetiva
-        anual, convertida para a mensal equivalente. O IOF é financiado junto com o valor.
+        O consórcio não considera reajuste da carta (INCC/IPCA), seguros nem TR. A taxa de juros é
+        efetiva anual, convertida para a mensal equivalente. O IOF é financiado junto com o valor.
       </footer>
     </main>
   )
