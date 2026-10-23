@@ -30,7 +30,10 @@ describe('simular', () => {
 
     expect(comIof.financiamento.iof).toBeGreaterThan(0)
     expect(isento.financiamento.iof).toBe(0)
-    expect(comIof.comparativo.economia - isento.comparativo.economia).toBe(comIof.financiamento.iof)
+    // O IOF financiado também gera juros, então pesa mais que o próprio IOF.
+    expect(comIof.comparativo.economia - isento.comparativo.economia).toBeGreaterThan(
+      comIof.financiamento.iof,
+    )
   })
 
   it('aceita valores no formato brasileiro', () => {

@@ -25,6 +25,9 @@ export function Resultado({ resultado }: { resultado: Sucesso }) {
   const linhasFinanciamento: Linha[] = [
     { rotulo: 'Entrada', valor: formatBRL(entrada) },
     { rotulo: 'Valor financiado', valor: formatBRL(financiamento.valorFinanciado) },
+    ...(financiamento.iof > 0
+      ? [{ rotulo: 'Financiado com IOF', valor: formatBRL(financiamento.valorTotalFinanciado) }]
+      : []),
     { rotulo: 'Taxa mensal', valor: formatPercent(financiamento.taxaJurosMensal) },
     { rotulo: 'Primeira parcela', valor: formatBRL(financiamento.primeiraParcela) },
     { rotulo: 'Última parcela', valor: formatBRL(financiamento.ultimaParcela) },

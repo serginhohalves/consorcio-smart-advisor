@@ -35,7 +35,10 @@ export interface ParcelaFinanciamento {
 }
 
 export interface FinanciamentoResultado {
+  /** Valor liberado ao cliente. */
   valorFinanciado: Cents
+  /** Valor liberado + IOF financiado: base das parcelas. */
+  valorTotalFinanciado: Cents
   sistema: SistemaAmortizacao
   taxaJurosMensal: number
   parcelas: ParcelaFinanciamento[]
@@ -43,8 +46,8 @@ export interface FinanciamentoResultado {
   ultimaParcela: Cents
   totalPago: Cents
   totalJuros: Cents
-  /** IOF cobrado na contratação (0 se isento). */
+  /** IOF financiado junto com o valor (0 se isento). */
   iof: Cents
-  /** Custo do crédito: juros + IOF. */
+  /** Custo do crédito acima do valor liberado: juros + IOF. */
   custoTotal: Cents
 }
