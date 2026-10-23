@@ -21,6 +21,8 @@ describe('compararSimulacoes', () => {
     const c = compararSimulacoes(consorcio, financiamento)
 
     expect(c.custoConsorcio).toBe(1_500_000)
+    expect(c.custoConsorcioPercentual).toBeCloseTo(0.15)
+    expect(c.custoFinanciamentoPercentual).toBeCloseTo(financiamento.totalJuros / 10_000_000)
     expect(c.custoFinanciamento).toBe(financiamento.totalJuros)
     expect(financiamento.iof).toBe(0)
     expect(c.economia).toBe(financiamento.totalJuros - 1_500_000)
