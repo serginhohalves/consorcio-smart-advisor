@@ -1,6 +1,7 @@
 import { formatBRL, formatPercent } from '../../shared/formatters'
 import type { ResultadoSimulacao } from '../simulacao'
 import { CardResultado, type Linha } from './CardResultado'
+import { ComposicaoEconomia } from './ComposicaoEconomia'
 
 type Sucesso = Extract<ResultadoSimulacao, { ok: true }>
 
@@ -56,6 +57,7 @@ export function Resultado({ resultado }: { resultado: Sucesso }) {
             : 'Nesse cenário, os juros e o IOF do financiamento ficam abaixo das taxas do consórcio.'}
         </p>
       </section>
+      <ComposicaoEconomia resultado={resultado} />
       <div className="grid gap-4 sm:grid-cols-2">
         <CardResultado titulo="Consórcio" linhas={linhasConsorcio} />
         <CardResultado titulo="Financiamento" linhas={linhasFinanciamento} />

@@ -5,8 +5,12 @@ import type { Cents } from '../domain/money'
 export interface Comparativo {
   /** Taxa de administração + fundo de reserva pagos no consórcio. */
   custoConsorcio: Cents
+  /** Custo do consórcio como fração do valor da carta. */
+  custoConsorcioPercentual: number
   /** Juros + IOF pagos no financiamento. */
   custoFinanciamento: Cents
+  /** Custo do financiamento como fração do valor liberado. */
+  custoFinanciamentoPercentual: number
   /** Quanto o consórcio custa a menos (negativo se o financiamento for mais barato). */
   economia: Cents
   /** Economia como fração do custo do financiamento (0 se o financiamento não tiver custo). */
@@ -30,7 +34,9 @@ export function compararSimulacoes(
 
   return {
     custoConsorcio,
+    custoConsorcioPercentual: custoConsorcio / consorcio.valorCarta,
     custoFinanciamento,
+    custoFinanciamentoPercentual: custoFinanciamento / financiamento.valorFinanciado,
     economia,
     economiaPercentual: custoFinanciamento === 0 ? 0 : economia / custoFinanciamento,
     diferencaParcelaInicial: financiamento.primeiraParcela - consorcio.parcelaInicial,
