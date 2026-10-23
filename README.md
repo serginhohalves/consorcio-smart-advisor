@@ -1,5 +1,7 @@
 # Consórcio Smart Advisor
 
+**App:** https://serginhohalves.github.io/consorcio-smart-advisor/
+
 Simulador mobile-first para comparar **consórcio** e **financiamento**.
 
 ## Stack
@@ -34,3 +36,8 @@ Valores monetários são representados em **centavos (inteiros)**.
 | `npm run typecheck` | Checagem de tipos           |
 | `npm run format`    | Formata o código (Prettier) |
 | `npm run build`     | Build de produção           |
+
+## Deploy
+
+Cada push no `main` publica o app no GitHub Pages (`.github/workflows/deploy.yml`).
+Requer, uma única vez: _Settings → Pages → Build and deployment → Source: GitHub Actions_.
