@@ -1,1 +1,56 @@
 @import 'tailwindcss';
+
+/* Paleta: azul institucional sobre neutros levemente azulados; verde/vermelho só para o veredito. */
+:root {
+  --fundo: #f3f5f7;
+  --superficie: #ffffff;
+  --texto: #17212b;
+  --suave: #5b6875;
+  --linha: #d9e0e6;
+  --destaque: #1f4fa3;
+  --destaque-suave: #e5ecf8;
+  --positivo: #1d7a4c;
+  --positivo-suave: #e3f3ea;
+  --negativo: #b3362d;
+  --negativo-suave: #f8e6e4;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #0f151b;
+    --superficie: #17202a;
+    --texto: #e6edf3;
+    --suave: #95a3b1;
+    --linha: #2a3643;
+    --destaque: #7fa7ec;
+    --destaque-suave: #1c2b44;
+    --positivo: #5cc98f;
+    --positivo-suave: #15301f;
+    --negativo: #f0857b;
+    --negativo-suave: #3a1c1a;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-fundo: var(--fundo);
+  --color-superficie: var(--superficie);
+  --color-texto: var(--texto);
+  --color-suave: var(--suave);
+  --color-linha: var(--linha);
+  --color-destaque: var(--destaque);
+  --color-destaque-suave: var(--destaque-suave);
+  --color-positivo: var(--positivo);
+  --color-positivo-suave: var(--positivo-suave);
+  --color-negativo: var(--negativo);
+  --color-negativo-suave: var(--negativo-suave);
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-display: 'Fraunces', Georgia, serif;
+}
+
+body {
+  background: var(--fundo);
+  color: var(--texto);
+}
