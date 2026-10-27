@@ -71,6 +71,23 @@ describe('simular', () => {
     expect(r.consorcio.cartaContemplada).toBe(30_000_000) // mês 12: ainda sem reajuste
   })
 
+  it('cobra o aluguel até a contemplação do lado do consórcio', () => {
+    const sem = simular(FORMULARIO_INICIAL)
+    const com = simular({ ...FORMULARIO_INICIAL, aluguelMensal: '2.500' })
+    const vazio = simular({ ...FORMULARIO_INICIAL, aluguelMensal: '' })
+    if (!sem.ok || !com.ok || !vazio.ok) throw new Error('simulação inválida')
+
+    expect(com.comparativo.aluguelAteContemplacao).toBe(12 * 250_000)
+    expect(com.comparativo.valorPresente.economia).toBeLessThan(
+      sem.comparativo.valorPresente.economia,
+    )
+    expect(vazio.comparativo.aluguelAteContemplacao).toBe(0)
+    expect(simular({ ...FORMULARIO_INICIAL, aluguelMensal: 'x' })).toMatchObject({
+      ok: false,
+      campo: 'aluguelMensal',
+    })
+  })
+
   it('contempla sem lance', () => {
     const r = simular({ ...FORMULARIO_INICIAL, lancePercentual: '0', mesContemplacao: '200' })
     expect(r.ok).toBe(true)

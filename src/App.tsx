@@ -118,7 +118,7 @@ function App() {
       <footer className="max-w-prose text-xs text-suave">
         A economia principal está em valor presente, descontada pelo rendimento da aplicação. A taxa
         de juros é efetiva anual, convertida para a mensal equivalente, e o IOF é financiado junto
-        com o valor. Não consideramos seguros nem o aluguel até a contemplação.
+        com o valor. Não consideramos seguros.
       </footer>
     </main>
   )

@@ -28,6 +28,7 @@ const CAMPOS_SIMULACAO: Omit<Campo<FormularioSimulacao>, 'tipo'> = {
   iof: { chave: 'iof', opcoes: ['cobrar', 'isento'] },
   reajusteAnual: { chave: 'reaj' },
   rendimentoAnual: { chave: 'rend' },
+  aluguelMensal: { chave: 'aluguel' },
 }
 
 const CAMPOS_HESITACAO: Campo<FormularioHesitacao> = {

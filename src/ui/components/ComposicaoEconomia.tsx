@@ -15,6 +15,7 @@ export function ComposicaoEconomia({ resultado }: { resultado: Sucesso }) {
   const escala = Math.max(comparativo.custoConsorcio, comparativo.custoFinanciamento)
   const temReajuste = consorcio.reajusteAnual > 0
   const temTr = financiamento.totalCorrecao > 0
+  const temAluguel = comparativo.aluguelAteContemplacao > 0
 
   const segmentos = [
     { rotulo: 'Juros', valor: financiamento.totalJuros, classe: 'bg-negativo' },
@@ -42,20 +43,36 @@ export function ComposicaoEconomia({ resultado }: { resultado: Sucesso }) {
           <div className="flex flex-wrap items-baseline justify-between gap-x-3">
             <span className="text-sm font-medium">
               Consórcio: taxa adm. + fundo de reserva{temReajuste && ' + reajuste'}
+              {temAluguel && ' + aluguel'}
             </span>
             <span className="font-mono text-sm tabular-nums">
               {formatBRL(comparativo.custoConsorcio)}
             </span>
           </div>
           <div className="flex h-3 overflow-hidden rounded-full bg-fundo" aria-hidden="true">
+            <div className="bg-destaque" style={{ width: largura(consorcio.custoTotal, escala) }} />
             <div
-              className="bg-destaque"
-              style={{ width: largura(comparativo.custoConsorcio, escala) }}
+              className="bg-destaque/45"
+              style={{ width: largura(comparativo.aluguelAteContemplacao, escala) }}
             />
           </div>
-          <span className="text-xs text-suave">
-            {formatPercent(comparativo.custoConsorcioPercentual)} da carta de{' '}
-            {formatBRL(consorcio.valorCarta)}, sem juros nem IOF
+          <span className="flex flex-wrap gap-x-4 text-xs text-suave">
+            {temAluguel && (
+              <>
+                <span>
+                  <span className="mr-1 inline-block size-2 rounded-full bg-destaque" />
+                  Taxas {formatBRL(consorcio.custoTotal)}
+                </span>
+                <span>
+                  <span className="mr-1 inline-block size-2 rounded-full bg-destaque/45" />
+                  Aluguel {formatBRL(comparativo.aluguelAteContemplacao)}
+                </span>
+              </>
+            )}
+            <span>
+              {formatPercent(comparativo.custoConsorcioPercentual)} da carta de{' '}
+              {formatBRL(consorcio.valorCarta)}, sem juros nem IOF
+            </span>
           </span>
         </div>
 
