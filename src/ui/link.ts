@@ -9,6 +9,13 @@ export interface EstadoSimulacao {
   simulacao: FormularioSimulacao
   hesitacao: FormularioHesitacao
   perfil: FormularioPerfil
+  /** Abre direto no modo apresentação. */
+  apresentacao: boolean
+}
+
+export interface OpcoesLink {
+  /** Tira a renda do cliente, para links que saem do banco (ex.: WhatsApp). */
+  semRenda?: boolean
 }
 
 type Campo<T> = { [K in keyof T]: { chave: string; opcoes?: readonly T[K][] } }
@@ -47,11 +54,13 @@ const TIPOS = ['imovel', 'veiculo'] as const
  * Gera a query string da simulação. Só entram os valores diferentes dos sugeridos
  * para o tipo, para o link ficar curto.
  */
-export function paraQueryString(estado: EstadoSimulacao): string {
+export function paraQueryString(estado: EstadoSimulacao, opcoes: OpcoesLink = {}): string {
   const params = new URLSearchParams({ tipo: estado.simulacao.tipo })
+  const perfil = opcoes.semRenda ? { ...estado.perfil, rendaMensal: '' } : estado.perfil
   escrever(params, CAMPOS_SIMULACAO, estado.simulacao, formularioDoTipo(estado.simulacao.tipo))
   escrever(params, CAMPOS_HESITACAO, estado.hesitacao, HESITACAO_INICIAL)
-  escrever(params, CAMPOS_PERFIL, estado.perfil, PERFIL_INICIAL)
+  escrever(params, CAMPOS_PERFIL, perfil, PERFIL_INICIAL)
+  if (estado.apresentacao) params.set('modo', 'apresentacao')
   return params.toString()
 }
 
@@ -71,6 +80,7 @@ export function deQueryString(query: string): EstadoSimulacao {
     },
     hesitacao: ler(params, CAMPOS_HESITACAO, HESITACAO_INICIAL),
     perfil: ler(params, CAMPOS_PERFIL, PERFIL_INICIAL),
+    apresentacao: params.get('modo') === 'apresentacao',
   }
 }
 

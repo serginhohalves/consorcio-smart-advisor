@@ -8,6 +8,7 @@ const inicial: EstadoSimulacao = {
   simulacao: formularioDoTipo('imovel'),
   hesitacao: HESITACAO_INICIAL,
   perfil: PERFIL_INICIAL,
+  apresentacao: false,
 }
 
 describe('link da simulação', () => {
@@ -28,6 +29,7 @@ describe('link da simulação', () => {
       },
       hesitacao: { mesesEspera: '18' },
       perfil: { urgencia: 'agora', objetivo: 'upgrade', rendaMensal: '12.000' },
+      apresentacao: true,
     }
     expect(deQueryString(paraQueryString(estado))).toEqual(estado)
   })
@@ -42,5 +44,11 @@ describe('link da simulação', () => {
 
   it('sem query, abre o exemplo inicial', () => {
     expect(deQueryString('')).toEqual(inicial)
+  })
+
+  it('pode tirar a renda do cliente do link', () => {
+    const estado = { ...inicial, perfil: { ...PERFIL_INICIAL, rendaMensal: '9.000' } }
+    expect(paraQueryString(estado)).toContain('renda=')
+    expect(paraQueryString(estado, { semRenda: true })).toBe('tipo=imovel')
   })
 })
