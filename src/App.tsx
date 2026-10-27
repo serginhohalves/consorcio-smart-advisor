@@ -1,32 +1,31 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { CopiarLink } from './ui/components/CopiarLink'
 import { CustoHesitacao } from './ui/components/CustoHesitacao'
 import { FormularioSimulacao } from './ui/components/FormularioSimulacao'
 import { Resultado } from './ui/components/Resultado'
 import { TermometroPerfil } from './ui/components/TermometroPerfil'
-import {
-  HESITACAO_INICIAL,
-  simularHesitacao,
-  type CampoHesitacao,
-  type FormularioHesitacao,
-} from './ui/hesitacao'
+import { simularHesitacao, type CampoHesitacao, type FormularioHesitacao } from './ui/hesitacao'
 import type { TipoConsorcio } from './core'
-import { PERFIL_INICIAL, simularPerfil, type FormularioPerfil } from './ui/perfil'
+import { deQueryString, paraQueryString } from './ui/link'
+import { simularPerfil, type FormularioPerfil } from './ui/perfil'
 import {
-  FORMULARIO_INICIAL,
   formularioDoTipo,
   simular,
   type CampoFormulario,
   type FormularioSimulacao as Formulario,
 } from './ui/simulacao'
 
+// Lido uma vez: a simulação pode chegar pronta pelo link.
+const estadoInicial = deQueryString(window.location.search)
+
 function App() {
-  const [form, setForm] = useState<Formulario>(FORMULARIO_INICIAL)
+  const [form, setForm] = useState<Formulario>(estadoInicial.simulacao)
   const resultado = useMemo(() => simular(form), [form])
   // Mantém o último resultado válido na tela enquanto o usuário corrige um campo.
   const [ultimoValido, setUltimoValido] = useState(resultado.ok ? resultado : null)
   if (resultado.ok && resultado !== ultimoValido) setUltimoValido(resultado)
 
-  const [formHesitacao, setFormHesitacao] = useState<FormularioHesitacao>(HESITACAO_INICIAL)
+  const [formHesitacao, setFormHesitacao] = useState<FormularioHesitacao>(estadoInicial.hesitacao)
   const recursosProprios = ultimoValido?.entrada ?? 0
   const premissas = useMemo(
     () =>
@@ -51,7 +50,7 @@ function App() {
   const aoMudarHesitacao = (campo: CampoHesitacao, valor: string) =>
     setFormHesitacao((atual) => ({ ...atual, [campo]: valor }))
 
-  const [formPerfil, setFormPerfil] = useState<FormularioPerfil>(PERFIL_INICIAL)
+  const [formPerfil, setFormPerfil] = useState<FormularioPerfil>(estadoInicial.perfil)
   const resultadoPerfil = useMemo(
     () => (ultimoValido ? simularPerfil(formPerfil, ultimoValido) : null),
     [formPerfil, ultimoValido],
@@ -63,6 +62,16 @@ function App() {
     setForm((atual) => ({ ...atual, [campo]: valor }))
   const aoMudarTipo = (tipo: TipoConsorcio) => setForm(formularioDoTipo(tipo))
 
+  // Mantém a URL igual à tela, para o link copiado reabrir a mesma simulação.
+  useEffect(() => {
+    const query = paraQueryString({ simulacao: form, hesitacao: formHesitacao, perfil: formPerfil })
+    try {
+      window.history.replaceState(null, '', `${window.location.pathname}?${query}`)
+    } catch {
+      // Em ambientes sem histórico (ex.: iframes restritos), o link apenas não acompanha.
+    }
+  }, [form, formHesitacao, formPerfil])
+
   return (
     <main className="mx-auto grid max-w-5xl gap-6 px-4 py-6 sm:py-10">
       <header className="grid gap-1">
@@ -73,6 +82,9 @@ function App() {
           Compare o custo de um consórcio com o de um financiamento usando os mesmos recursos
           próprios.
         </p>
+        <div className="mt-2">
+          <CopiarLink />
+        </div>
       </header>
       <div className="grid items-start gap-6 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <FormularioSimulacao
