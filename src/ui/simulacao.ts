@@ -35,6 +35,8 @@ export interface FormularioSimulacao {
   reajusteAnual: string
   /** Rendimento líquido da aplicação: taxa de desconto do valor presente. */
   rendimentoAnual: string
+  /** Aluguel (ou transporte) pago enquanto o consórcio não é contemplado, em reais. */
+  aluguelMensal: string
 }
 
 export type CampoFormulario = keyof FormularioSimulacao
@@ -57,6 +59,7 @@ export function formularioDoTipo(tipo: TipoConsorcio): FormularioSimulacao {
     iof: p.cobraIof ? 'cobrar' : 'isento',
     reajusteAnual: formatDecimalBR(p.reajusteAnualBem * 100),
     rendimentoAnual: '10',
+    aluguelMensal: '0',
   }
 }
 
@@ -84,6 +87,7 @@ const CAMPO_POR_ERRO: Record<string, CampoFormulario> = {
   taxaJurosAnual: 'taxaJurosAnual',
   trAnual: 'trAnual',
   taxaDescontoAnual: 'rendimentoAnual',
+  aluguelMensal: 'aluguelMensal',
 }
 
 const MENSAGENS: Record<CampoFormulario, string> = {
@@ -102,6 +106,7 @@ const MENSAGENS: Record<CampoFormulario, string> = {
   trAnual: 'Informe uma TR entre 0% e 100% a.a.',
   reajusteAnual: 'Informe um reajuste entre 0% e 100% a.a.',
   rendimentoAnual: 'Informe um rendimento válido (0% ou mais).',
+  aluguelMensal: 'Informe um valor mensal de 0 ou mais (deixe 0 se não houver).',
 }
 
 /**
@@ -145,7 +150,10 @@ export function simular(form: FormularioSimulacao): ResultadoSimulacao {
       ok: true,
       consorcio,
       financiamento,
-      comparativo: compararSimulacoes(consorcio, financiamento, percentual('rendimentoAnual')),
+      comparativo: compararSimulacoes(consorcio, financiamento, {
+        taxaDescontoAnual: percentual('rendimentoAnual'),
+        aluguelMensal: form.aluguelMensal.trim() === '' ? 0 : toCents(numero('aluguelMensal')),
+      }),
       entrada,
     }
   } catch (erro) {

@@ -24,6 +24,7 @@ describe('link da simulação', () => {
         abatimento: 'prazo',
         iof: 'isento',
         rendimentoAnual: '11,5',
+        aluguelMensal: '2.800',
       },
       hesitacao: { mesesEspera: '18' },
       perfil: { urgencia: 'agora', objetivo: 'upgrade', rendaMensal: '12.000' },

@@ -31,6 +31,11 @@ const DICA_IOF: Record<TipoConsorcio, string> = {
   veiculo: 'Pessoa física paga 0,38% + 0,0082% ao dia (até 365 dias), financiado junto.',
 }
 
+const ROTULO_ALUGUEL: Record<TipoConsorcio, string> = {
+  imovel: 'Aluguel mensal até a contemplação',
+  veiculo: 'Transporte mensal até a contemplação',
+}
+
 const INDICE_REAJUSTE: Record<TipoConsorcio, string> = {
   imovel: 'Imóveis costumam seguir o INCC.',
   veiculo: 'Veículos novos costumam seguir o IPCA.',
@@ -211,6 +216,15 @@ export function FormularioSimulacao({
           valor={form.rendimentoAnual}
           aoMudar={(v) => aoMudar('rendimentoAnual', v)}
           erro={erroDe('rendimentoAnual')}
+        />
+        <CampoNumerico
+          id="aluguelMensal"
+          rotulo={ROTULO_ALUGUEL[form.tipo]}
+          prefixo="R$"
+          dica="Opcional. O que o cliente gasta por ainda não ter o bem, reajustado como a carta. No financiamento o bem chega na hora."
+          valor={form.aluguelMensal}
+          aoMudar={(v) => aoMudar('aluguelMensal', v)}
+          erro={erroDe('aluguelMensal')}
         />
       </Grupo>
     </form>

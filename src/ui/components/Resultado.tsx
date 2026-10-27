@@ -26,6 +26,14 @@ export function Resultado({ resultado }: { resultado: Sucesso }) {
       : []),
     { rotulo: 'Total pago', valor: formatBRL(consorcio.totalPago) },
     { rotulo: 'Pago além da carta', valor: formatBRL(consorcio.custoTotal) },
+    ...(comparativo.aluguelAteContemplacao > 0
+      ? [
+          {
+            rotulo: 'Aluguel até a contemplação',
+            valor: formatBRL(comparativo.aluguelAteContemplacao),
+          },
+        ]
+      : []),
   ]
 
   const linhasFinanciamento: Linha[] = [
@@ -66,7 +74,8 @@ export function Resultado({ resultado }: { resultado: Sucesso }) {
           {economiza
             ? `Em valor presente, descontando ${taxaDesconto}: ${formatPercent(vp.economiaPercentual)} do valor da carta.`
             : `Em valor presente, descontando ${taxaDesconto}, o financiamento sai mais barato neste cenário.`}{' '}
-          Na soma simples das parcelas, a diferença é de {formatBRL(comparativo.economia)}.
+          Na soma simples das parcelas, a diferença é de {formatBRL(Math.abs(comparativo.economia))}{' '}
+          a favor do {comparativo.economia >= 0 ? 'consórcio' : 'financiamento'}.
         </p>
       </section>
       <ComposicaoEconomia resultado={resultado} />
