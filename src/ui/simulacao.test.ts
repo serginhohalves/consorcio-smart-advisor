@@ -53,6 +53,29 @@ describe('simular', () => {
     )
   })
 
+  it('aplica a TR só para imóvel', () => {
+    const imovel = simular({ ...FORMULARIO_INICIAL, trAnual: '2' })
+    const veiculo = simular({ ...formularioDoTipo('veiculo'), trAnual: '2' })
+    if (!imovel.ok || !veiculo.ok) throw new Error('simulação inválida')
+
+    expect(imovel.financiamento.totalCorrecao).toBeGreaterThan(0)
+    expect(veiculo.financiamento.totalCorrecao).toBe(0)
+  })
+
+  it('compara em valor presente com o rendimento informado', () => {
+    const r = simular({ ...FORMULARIO_INICIAL, rendimentoAnual: '8' })
+    if (!r.ok) throw new Error(r.mensagem)
+
+    expect(r.comparativo.valorPresente.taxaDescontoAnual).toBeCloseTo(0.08)
+    expect(r.consorcio.reajusteAnual).toBeCloseTo(0.05)
+    expect(r.consorcio.cartaContemplada).toBe(30_000_000) // mês 12: ainda sem reajuste
+  })
+
+  it('contempla sem lance', () => {
+    const r = simular({ ...FORMULARIO_INICIAL, lancePercentual: '0', mesContemplacao: '200' })
+    expect(r.ok).toBe(true)
+  })
+
   it('aceita valores no formato brasileiro', () => {
     const r = simular({ ...FORMULARIO_INICIAL, valorCarta: '150.000,50' })
     expect(r.ok && r.consorcio.valorCarta).toBe(15_000_050)
@@ -64,6 +87,9 @@ describe('simular', () => {
     ['lancePercentual', '61'],
     ['mesContemplacao', '200'],
     ['taxaJurosAnual', 'abc'],
+    ['reajusteAnual', '-1'],
+    ['rendimentoAnual', '-1'],
+    ['trAnual', '-1'],
   ] as const)('indica o campo %s inválido', (campo, valor) => {
     const r = simular({ ...FORMULARIO_INICIAL, [campo]: valor })
     expect(r).toMatchObject({ ok: false, campo })

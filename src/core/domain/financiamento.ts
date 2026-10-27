@@ -10,6 +10,11 @@ export interface FinanciamentoInput {
   sistema: SistemaAmortizacao
   /** Alíquotas de IOF. Omitido = isento (ex.: financiamento habitacional de pessoa física). */
   iof?: AliquotasIof
+  /**
+   * TR anual estimada, como fração. Corrige o saldo devedor todo mês antes dos juros,
+   * como no SFH, e a parcela é recalculada sobre o saldo corrigido. Padrão: 0.
+   */
+  trAnual?: number
 }
 
 export interface AliquotasIof {
@@ -30,6 +35,8 @@ export interface ParcelaFinanciamento {
   valor: Cents
   juros: Cents
   amortizacao: Cents
+  /** Correção monetária (TR) somada ao saldo devedor neste mês. */
+  correcao: Cents
   /** Saldo devedor após o pagamento desta parcela. */
   saldoDevedor: Cents
 }
@@ -46,8 +53,10 @@ export interface FinanciamentoResultado {
   ultimaParcela: Cents
   totalPago: Cents
   totalJuros: Cents
+  /** Correção do saldo pela TR ao longo do contrato (0 sem TR). */
+  totalCorrecao: Cents
   /** IOF financiado junto com o valor (0 se isento). */
   iof: Cents
-  /** Custo do crédito acima do valor liberado: juros + IOF. */
+  /** Custo do crédito acima do valor liberado: juros + IOF + correção pela TR. */
   custoTotal: Cents
 }

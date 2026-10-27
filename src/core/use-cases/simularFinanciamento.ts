@@ -21,14 +21,24 @@ export function taxaMensalEquivalente(taxaAnual: number): number {
  * somado ao valor liberado, com o cálculo refeito até o IOF estabilizar.
  */
 export function simularFinanciamento(input: FinanciamentoInput): FinanciamentoResultado {
-  const { valorFinanciado, prazoMeses, taxaJurosAnual, sistema, iof: aliquotasIof } = input
+  const {
+    valorFinanciado,
+    prazoMeses,
+    taxaJurosAnual,
+    sistema,
+    iof: aliquotasIof,
+    trAnual = 0,
+  } = input
 
   assertPositiveInteger('valorFinanciado', valorFinanciado)
   assertPositiveInteger('prazoMeses', prazoMeses)
   assertFractionInRange('taxaJurosAnual', taxaJurosAnual, 0, 10)
+  assertFractionInRange('trAnual', trAnual, 0, 1)
 
   const taxaJurosMensal = taxaMensalEquivalente(taxaJurosAnual)
-  const gerar = (principal: Cents) => gerarParcelas(principal, prazoMeses, taxaJurosMensal, sistema)
+  const trMensal = taxaMensalEquivalente(trAnual)
+  const gerar = (principal: Cents) =>
+    gerarParcelas(principal, prazoMeses, taxaJurosMensal, trMensal, sistema)
 
   let iof = 0
   let parcelas = gerar(valorFinanciado)
@@ -45,7 +55,8 @@ export function simularFinanciamento(input: FinanciamentoInput): FinanciamentoRe
 
   const valorTotalFinanciado = valorFinanciado + iof
   const totalPago = parcelas.reduce((acc, p) => acc + p.valor, 0)
-  const totalJuros = totalPago - valorTotalFinanciado
+  const totalJuros = parcelas.reduce((acc, p) => acc + p.juros, 0)
+  const totalCorrecao = parcelas.reduce((acc, p) => acc + p.correcao, 0)
 
   return {
     valorFinanciado,
@@ -57,6 +68,7 @@ export function simularFinanciamento(input: FinanciamentoInput): FinanciamentoRe
     ultimaParcela: parcelas[parcelas.length - 1]?.valor ?? 0,
     totalPago,
     totalJuros,
+    totalCorrecao,
     iof,
     custoTotal: totalPago - valorFinanciado,
   }
@@ -69,24 +81,45 @@ function gerarParcelas(
   principal: Cents,
   prazoMeses: number,
   taxaJurosMensal: number,
+  trMensal: number,
   sistema: SistemaAmortizacao,
 ): ParcelaFinanciamento[] {
-  const amortizacaoPara =
-    sistema === 'price'
-      ? amortizacaoPrice(principal, prazoMeses, taxaJurosMensal)
-      : amortizacaoSac(principal, prazoMeses)
-
   const parcelas: ParcelaFinanciamento[] = []
   let saldo = principal
+  // Sem TR a parcela (Price) ou a amortização (SAC) é calculada uma vez; com TR, é
+  // recalculada todo mês sobre o saldo corrigido e os meses que faltam.
+  let amortizacaoPara = amortizacaoDoSistema(sistema, principal, prazoMeses, taxaJurosMensal)
 
   for (let numero = 1; numero <= prazoMeses; numero++) {
+    const correcao = Math.round(saldo * trMensal)
+    saldo += correcao
+    if (trMensal > 0) {
+      const restantes = prazoMeses - numero + 1
+      amortizacaoPara = amortizacaoDoSistema(sistema, saldo, restantes, taxaJurosMensal)
+    }
     const juros = Math.round(saldo * taxaJurosMensal)
     const amortizacao = numero === prazoMeses ? saldo : Math.min(amortizacaoPara(juros), saldo)
     saldo -= amortizacao
-    parcelas.push({ numero, valor: juros + amortizacao, juros, amortizacao, saldoDevedor: saldo })
+    parcelas.push({
+      numero,
+      valor: juros + amortizacao,
+      juros,
+      amortizacao,
+      correcao,
+      saldoDevedor: saldo,
+    })
   }
 
   return parcelas
+}
+
+function amortizacaoDoSistema(
+  sistema: SistemaAmortizacao,
+  principal: Cents,
+  n: number,
+  i: number,
+): (juros: Cents) => Cents {
+  return sistema === 'price' ? amortizacaoPrice(principal, n, i) : amortizacaoSac(principal, n)
 }
 
 /**

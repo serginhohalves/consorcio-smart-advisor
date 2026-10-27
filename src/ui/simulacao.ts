@@ -27,8 +27,14 @@ export interface FormularioSimulacao {
   mesContemplacao: string
   abatimento: AbatimentoLance
   taxaJurosAnual: string
+  /** TR anual estimada; só usada para imóvel. */
+  trAnual: string
   sistema: SistemaAmortizacao
   iof: 'cobrar' | 'isento'
+  /** Reajuste anual do bem: corrige a carta e as parcelas do consórcio. */
+  reajusteAnual: string
+  /** Rendimento líquido da aplicação: taxa de desconto do valor presente. */
+  rendimentoAnual: string
 }
 
 export type CampoFormulario = keyof FormularioSimulacao
@@ -46,8 +52,11 @@ export function formularioDoTipo(tipo: TipoConsorcio): FormularioSimulacao {
     mesContemplacao: '12',
     abatimento: 'parcela',
     taxaJurosAnual: formatDecimalBR(p.taxaJurosAnual * 100),
+    trAnual: '0',
     sistema: p.sistema,
     iof: p.cobraIof ? 'cobrar' : 'isento',
+    reajusteAnual: formatDecimalBR(p.reajusteAnualBem * 100),
+    rendimentoAnual: '10',
   }
 }
 
@@ -70,8 +79,11 @@ const CAMPO_POR_ERRO: Record<string, CampoFormulario> = {
   taxaAdministracao: 'taxaAdministracao',
   fundoReserva: 'fundoReserva',
   'lance.percentual': 'lancePercentual',
-  'lance.mesContemplacao': 'mesContemplacao',
+  mesContemplacao: 'mesContemplacao',
+  reajusteAnual: 'reajusteAnual',
   taxaJurosAnual: 'taxaJurosAnual',
+  trAnual: 'trAnual',
+  taxaDescontoAnual: 'rendimentoAnual',
 }
 
 const MENSAGENS: Record<CampoFormulario, string> = {
@@ -81,16 +93,21 @@ const MENSAGENS: Record<CampoFormulario, string> = {
   taxaAdministracao: 'A taxa de administração deve estar entre 0% e 100%.',
   fundoReserva: 'O fundo de reserva deve estar entre 0% e 100%.',
   lancePercentual: 'O lance deve estar entre 0% e 60% da carta.',
-  mesContemplacao: 'O mês da contemplação deve ser anterior ao fim do prazo.',
+  mesContemplacao:
+    'O mês da contemplação deve estar dentro do prazo (com lance, antes do último mês).',
   abatimento: 'Escolha se o lance reduz a parcela ou o prazo.',
   taxaJurosAnual: 'Informe uma taxa de juros válida.',
   sistema: 'Escolha Price ou SAC.',
   iof: 'Escolha se o financiamento paga IOF.',
+  trAnual: 'Informe uma TR entre 0% e 100% a.a.',
+  reajusteAnual: 'Informe um reajuste entre 0% e 100% a.a.',
+  rendimentoAnual: 'Informe um rendimento válido (0% ou mais).',
 }
 
 /**
  * Executa a simulação a partir do formulário. O financiamento usa o mesmo prazo
- * do consórcio e o valor da carta menos o lance, que entra como entrada.
+ * do consórcio e o valor da carta menos o lance, que entra como entrada. A TR só
+ * vale para imóvel (SFH).
  */
 export function simular(form: FormularioSimulacao): ResultadoSimulacao {
   const numero = (campo: CampoFormulario) => parseDecimalBR(form[campo])
@@ -106,13 +123,11 @@ export function simular(form: FormularioSimulacao): ResultadoSimulacao {
       prazoMeses,
       taxaAdministracao: percentual('taxaAdministracao'),
       fundoReserva: percentual('fundoReserva'),
+      mesContemplacao: numero('mesContemplacao'),
+      reajusteAnual: percentual('reajusteAnual'),
       lance:
         lancePercentual > 0
-          ? {
-              percentual: lancePercentual,
-              mesContemplacao: numero('mesContemplacao'),
-              abatimento: form.abatimento,
-            }
+          ? { percentual: lancePercentual, abatimento: form.abatimento }
           : undefined,
     })
 
@@ -123,13 +138,14 @@ export function simular(form: FormularioSimulacao): ResultadoSimulacao {
       taxaJurosAnual: percentual('taxaJurosAnual'),
       sistema: form.sistema,
       iof: form.iof === 'cobrar' ? IOF_PESSOA_FISICA : undefined,
+      trAnual: form.tipo === 'imovel' ? percentual('trAnual') : 0,
     })
 
     return {
       ok: true,
       consorcio,
       financiamento,
-      comparativo: compararSimulacoes(consorcio, financiamento),
+      comparativo: compararSimulacoes(consorcio, financiamento, percentual('rendimentoAnual')),
       entrada,
     }
   } catch (erro) {

@@ -1,4 +1,4 @@
-import { formatBRL, formatPercent } from '../../shared/formatters'
+import { formatBRL, formatDecimalBR, formatPercent } from '../../shared/formatters'
 import type { ResultadoSimulacao } from '../simulacao'
 import { CardResultado, type Linha } from './CardResultado'
 import { ComposicaoEconomia } from './ComposicaoEconomia'
@@ -7,7 +7,9 @@ type Sucesso = Extract<ResultadoSimulacao, { ok: true }>
 
 export function Resultado({ resultado }: { resultado: Sucesso }) {
   const { consorcio, financiamento, comparativo, entrada } = resultado
-  const economiza = comparativo.economia >= 0
+  const vp = comparativo.valorPresente
+  const economiza = vp.economia >= 0
+  const taxaDesconto = `${formatDecimalBR(vp.taxaDescontoAnual * 100)}% a.a.`
 
   const linhasConsorcio: Linha[] = [
     { rotulo: 'Parcela inicial', valor: formatBRL(consorcio.parcelaInicial) },
@@ -19,8 +21,11 @@ export function Resultado({ resultado }: { resultado: Sucesso }) {
         ]
       : []),
     { rotulo: 'Total de parcelas', valor: consorcio.parcelas.length },
+    ...(consorcio.reajusteAnual > 0
+      ? [{ rotulo: 'Carta na contemplação', valor: formatBRL(consorcio.cartaContemplada) }]
+      : []),
     { rotulo: 'Total pago', valor: formatBRL(consorcio.totalPago) },
-    { rotulo: 'Taxa adm. + fundo de reserva', valor: formatBRL(consorcio.custoTotal) },
+    { rotulo: 'Pago além da carta', valor: formatBRL(consorcio.custoTotal) },
   ]
 
   const linhasFinanciamento: Linha[] = [
@@ -35,7 +40,13 @@ export function Resultado({ resultado }: { resultado: Sucesso }) {
     { rotulo: 'Total pago', valor: formatBRL(financiamento.totalPago) },
     { rotulo: 'Juros', valor: formatBRL(financiamento.totalJuros) },
     { rotulo: 'IOF', valor: formatBRL(financiamento.iof) },
-    { rotulo: 'Juros + IOF', valor: formatBRL(financiamento.custoTotal) },
+    ...(financiamento.totalCorrecao > 0
+      ? [{ rotulo: 'Correção pela TR', valor: formatBRL(financiamento.totalCorrecao) }]
+      : []),
+    {
+      rotulo: financiamento.totalCorrecao > 0 ? 'Juros + IOF + TR' : 'Juros + IOF',
+      valor: formatBRL(financiamento.custoTotal),
+    },
   ]
 
   return (
@@ -49,12 +60,13 @@ export function Resultado({ resultado }: { resultado: Sucesso }) {
           {economiza ? 'Economia com o consórcio' : 'Diferença a favor do financiamento'}
         </h2>
         <p className="font-display text-4xl font-semibold tabular-nums">
-          {formatBRL(Math.abs(comparativo.economia))}
+          {formatBRL(Math.abs(vp.economia))}
         </p>
         <p className="text-texto">
           {economiza
-            ? `O consórcio custa ${formatPercent(comparativo.economiaPercentual)} menos que os juros e o IOF do financiamento.`
-            : 'Nesse cenário, os juros e o IOF do financiamento ficam abaixo das taxas do consórcio.'}
+            ? `Em valor presente, descontando ${taxaDesconto}: ${formatPercent(vp.economiaPercentual)} do valor da carta.`
+            : `Em valor presente, descontando ${taxaDesconto}, o financiamento sai mais barato neste cenário.`}{' '}
+          Na soma simples das parcelas, a diferença é de {formatBRL(comparativo.economia)}.
         </p>
       </section>
       <ComposicaoEconomia resultado={resultado} />

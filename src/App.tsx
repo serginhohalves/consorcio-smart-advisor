@@ -5,7 +5,6 @@ import { Resultado } from './ui/components/Resultado'
 import { TermometroPerfil } from './ui/components/TermometroPerfil'
 import {
   HESITACAO_INICIAL,
-  hesitacaoDoTipo,
   simularHesitacao,
   type CampoHesitacao,
   type FormularioHesitacao,
@@ -29,12 +28,25 @@ function App() {
 
   const [formHesitacao, setFormHesitacao] = useState<FormularioHesitacao>(HESITACAO_INICIAL)
   const recursosProprios = ultimoValido?.entrada ?? 0
+  const premissas = useMemo(
+    () =>
+      ultimoValido && {
+        reajusteAnualBem: ultimoValido.consorcio.reajusteAnual,
+        rendimentoAnualAplicacao: ultimoValido.comparativo.valorPresente.taxaDescontoAnual,
+      },
+    [ultimoValido],
+  )
   const resultadoHesitacao = useMemo(
     () =>
-      ultimoValido
-        ? simularHesitacao(formHesitacao, ultimoValido.consorcio.valorCarta, recursosProprios)
+      ultimoValido && premissas
+        ? simularHesitacao(
+            formHesitacao,
+            ultimoValido.consorcio.valorCarta,
+            recursosProprios,
+            premissas,
+          )
         : null,
-    [formHesitacao, ultimoValido, recursosProprios],
+    [formHesitacao, ultimoValido, recursosProprios, premissas],
   )
   const aoMudarHesitacao = (campo: CampoHesitacao, valor: string) =>
     setFormHesitacao((atual) => ({ ...atual, [campo]: valor }))
@@ -49,10 +61,7 @@ function App() {
 
   const aoMudar = <C extends CampoFormulario>(campo: C, valor: Formulario[C]) =>
     setForm((atual) => ({ ...atual, [campo]: valor }))
-  const aoMudarTipo = (tipo: TipoConsorcio) => {
-    setForm(formularioDoTipo(tipo))
-    setFormHesitacao(hesitacaoDoTipo(tipo))
-  }
+  const aoMudarTipo = (tipo: TipoConsorcio) => setForm(formularioDoTipo(tipo))
 
   return (
     <main className="mx-auto grid max-w-5xl gap-6 px-4 py-6 sm:py-10">
@@ -83,9 +92,9 @@ function App() {
               resultado={resultadoPerfil}
             />
           )}
-          {resultadoHesitacao && (
+          {resultadoHesitacao && premissas && (
             <CustoHesitacao
-              tipo={form.tipo}
+              premissas={premissas}
               form={formHesitacao}
               aoMudar={aoMudarHesitacao}
               resultado={resultadoHesitacao}
@@ -95,8 +104,9 @@ function App() {
         </div>
       </div>
       <footer className="max-w-prose text-xs text-suave">
-        O consórcio não considera reajuste da carta (INCC/IPCA), seguros nem TR. A taxa de juros é
-        efetiva anual, convertida para a mensal equivalente. O IOF é financiado junto com o valor.
+        A economia principal está em valor presente, descontada pelo rendimento da aplicação. A taxa
+        de juros é efetiva anual, convertida para a mensal equivalente, e o IOF é financiado junto
+        com o valor. Não consideramos seguros nem o aluguel até a contemplação.
       </footer>
     </main>
   )

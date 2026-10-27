@@ -9,6 +9,7 @@ describe('compararSimulacoes', () => {
     valorCarta: 10_000_000,
     prazoMeses: 100,
     taxaAdministracao: 0.15,
+    mesContemplacao: 10,
   })
 
   it('calcula a economia do consórcio frente aos juros do financiamento', () => {
@@ -18,7 +19,7 @@ describe('compararSimulacoes', () => {
       taxaJurosAnual: 0.12,
       sistema: 'price',
     })
-    const c = compararSimulacoes(consorcio, financiamento)
+    const c = compararSimulacoes(consorcio, financiamento, 0.1)
 
     expect(c.custoConsorcio).toBe(1_500_000)
     expect(c.custoConsorcioPercentual).toBeCloseTo(0.15)
@@ -39,7 +40,7 @@ describe('compararSimulacoes', () => {
       sistema: 'price',
       iof: IOF_PESSOA_FISICA,
     })
-    const c = compararSimulacoes(consorcio, financiamento)
+    const c = compararSimulacoes(consorcio, financiamento, 0.1)
 
     expect(financiamento.iof).toBeGreaterThan(0)
     expect(c.custoFinanciamento).toBe(financiamento.totalJuros + financiamento.iof)
@@ -52,9 +53,51 @@ describe('compararSimulacoes', () => {
       taxaJurosAnual: 0,
       sistema: 'price',
     })
-    const c = compararSimulacoes(consorcio, financiamento)
+    const c = compararSimulacoes(consorcio, financiamento, 0.1)
 
     expect(c.economia).toBe(-1_500_000)
     expect(c.economiaPercentual).toBe(0)
+  })
+
+  describe('em valor presente', () => {
+    const financiamento = simularFinanciamento({
+      valorFinanciado: 7_000_000,
+      prazoMeses: 100,
+      taxaJurosAnual: 0.12,
+      sistema: 'price',
+    })
+    const comLance = simularConsorcio({
+      valorCarta: 10_000_000,
+      prazoMeses: 100,
+      taxaAdministracao: 0.15,
+      mesContemplacao: 10,
+      reajusteAnual: 0.05,
+      lance: { percentual: 0.3, abatimento: 'parcela' },
+    })
+
+    it('sem desconto, coincide com a soma nominal', () => {
+      const c = compararSimulacoes(comLance, financiamento, 0)
+      expect(c.valorPresente.custoConsorcio).toBe(c.custoConsorcio)
+      expect(c.valorPresente.custoFinanciamento).toBe(c.custoFinanciamento)
+      expect(c.valorPresente.economia).toBe(c.economia)
+    })
+
+    it('com desconto, pesa menos os pagamentos distantes', () => {
+      const c = compararSimulacoes(comLance, financiamento, 0.1)
+      expect(c.valorPresente.custoFinanciamento).toBeLessThan(c.custoFinanciamento)
+      expect(c.valorPresente.economia).toBeLessThan(c.economia)
+      expect(c.valorPresente.economiaPercentual).toBeCloseTo(c.valorPresente.economia / 10_000_000)
+    })
+
+    it('financiamento à mesma taxa do desconto custa zero em valor presente', () => {
+      const c = compararSimulacoes(comLance, financiamento, 0.12)
+      expect(Math.abs(c.valorPresente.custoFinanciamento)).toBeLessThan(100)
+    })
+
+    it('rejeita taxa de desconto negativa', () => {
+      expect(() => compararSimulacoes(comLance, financiamento, -0.01)).toThrow(
+        expect.objectContaining({ field: 'taxaDescontoAnual' }),
+      )
+    })
   })
 })
