@@ -1,4 +1,5 @@
-import { FAIXAS_PERFIL, type CriterioPerfil, type FaixaPerfil } from '../../core'
+import { FAIXAS_PERFIL, type CriterioPerfil } from '../../core'
+import { FAIXA_PERFIL } from '../faixas'
 import { formatPercent } from '../../shared/formatters'
 import type { FormularioPerfil, ResultadoPerfil } from '../perfil'
 import { CampoNumerico } from './CampoNumerico'
@@ -18,24 +19,6 @@ const ROTULO_CRITERIO: Record<CriterioPerfil, string> = {
   renda: 'Parcela sobre a renda',
 }
 
-const FAIXA: Record<FaixaPerfil, { titulo: string; texto: string; cor: string }> = {
-  consorcio: {
-    titulo: 'Perfil consórcio',
-    texto: 'A necessidade do cliente combina com o planejamento do consórcio.',
-    cor: 'text-positivo',
-  },
-  misto: {
-    titulo: 'Perfil misto',
-    texto: 'O consórcio funciona melhor com lance, para antecipar a contemplação.',
-    cor: 'text-atencao',
-  },
-  financiamento: {
-    titulo: 'Financiamento mais adequado',
-    texto: 'A urgência ou o orçamento do cliente pedem o crédito imediato.',
-    cor: 'text-negativo',
-  },
-}
-
 const pontos = new Intl.NumberFormat('pt-BR', {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
@@ -43,7 +26,7 @@ const pontos = new Intl.NumberFormat('pt-BR', {
 
 export function TermometroPerfil({ form, aoMudar, resultado }: TermometroPerfilProps) {
   const r = resultado.ok ? resultado.resultado : null
-  const faixa = r ? FAIXA[r.faixa] : null
+  const faixa = r ? FAIXA_PERFIL[r.faixa] : null
 
   return (
     <section className="grid gap-4 rounded-xl border border-linha bg-superficie p-5">
