@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { LANCE_MAXIMO } from '../../core'
+import { LANCE_MAXIMO, PARAMETROS_POR_TIPO, type TipoConsorcio } from '../../core'
 import type { CampoFormulario, FormularioSimulacao as Formulario } from '../simulacao'
 import { CampoNumerico } from './CampoNumerico'
 import { Segmentado } from './Segmentado'
@@ -7,6 +7,8 @@ import { Segmentado } from './Segmentado'
 interface FormularioSimulacaoProps {
   form: Formulario
   aoMudar: <C extends CampoFormulario>(campo: C, valor: Formulario[C]) => void
+  /** Troca o tipo e recarrega os valores sugeridos. */
+  aoMudarTipo: (tipo: TipoConsorcio) => void
   erro?: { campo: CampoFormulario; mensagem: string }
 }
 
@@ -19,7 +21,22 @@ function Grupo({ titulo, children }: { titulo: string; children: ReactNode }) {
   )
 }
 
-export function FormularioSimulacao({ form, aoMudar, erro }: FormularioSimulacaoProps) {
+const TIPOS = (Object.keys(PARAMETROS_POR_TIPO) as TipoConsorcio[]).map((tipo) => ({
+  valor: tipo,
+  rotulo: PARAMETROS_POR_TIPO[tipo].rotulo,
+}))
+
+const DICA_IOF: Record<TipoConsorcio, string> = {
+  imovel: 'Financiamento habitacional de pessoa física é isento de IOF.',
+  veiculo: 'Pessoa física paga 0,38% + 0,0082% ao dia (até 365 dias), financiado junto.',
+}
+
+export function FormularioSimulacao({
+  form,
+  aoMudar,
+  aoMudarTipo,
+  erro,
+}: FormularioSimulacaoProps) {
   const erroDe = (campo: CampoFormulario) => (erro?.campo === campo ? erro.mensagem : undefined)
   const lanceMaximo = LANCE_MAXIMO * 100
 
@@ -29,6 +46,19 @@ export function FormularioSimulacao({ form, aoMudar, erro }: FormularioSimulacao
       noValidate
       className="grid gap-6 rounded-xl border border-linha bg-superficie p-5"
     >
+      <Grupo titulo="Tipo de bem">
+        <div className="grid gap-1">
+          <Segmentado
+            nome="tipo"
+            rotulo="O que o cliente quer comprar?"
+            valor={form.tipo}
+            aoMudar={aoMudarTipo}
+            opcoes={TIPOS}
+          />
+          <p className="text-xs text-suave">Trocar o tipo recarrega os valores sugeridos.</p>
+        </div>
+      </Grupo>
+
       <Grupo titulo="Consórcio">
         <CampoNumerico
           id="valorCarta"
@@ -142,10 +172,7 @@ export function FormularioSimulacao({ form, aoMudar, erro }: FormularioSimulacao
               { valor: 'isento', rotulo: 'Isento' },
             ]}
           />
-          <p className="text-xs text-suave">
-            0,38% + 0,0082% ao dia (até 365 dias). Financiamento habitacional de pessoa física é
-            isento.
-          </p>
+          <p className="text-xs text-suave">{DICA_IOF[form.tipo]}</p>
         </div>
       </Grupo>
     </form>

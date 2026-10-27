@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FORMULARIO_INICIAL, simular } from './simulacao'
+import { FORMULARIO_INICIAL, formularioDoTipo, simular } from './simulacao'
 
 describe('simular', () => {
   it('simula o exemplo inicial', () => {
@@ -23,8 +23,25 @@ describe('simular', () => {
     expect(r.financiamento.valorFinanciado).toBe(30_000_000)
   })
 
-  it('cobra IOF por padrão e permite isentar', () => {
-    const comIof = simular(FORMULARIO_INICIAL)
+  it('preenche os valores sugeridos de cada tipo', () => {
+    expect(formularioDoTipo('imovel')).toMatchObject({
+      valorCarta: '300.000',
+      taxaJurosAnual: '10,5',
+      sistema: 'sac',
+      iof: 'isento',
+    })
+    expect(formularioDoTipo('veiculo')).toMatchObject({
+      valorCarta: '120.000',
+      prazoMeses: '80',
+      fundoReserva: '1,5',
+      sistema: 'price',
+      iof: 'cobrar',
+    })
+    expect(simular(formularioDoTipo('veiculo')).ok).toBe(true)
+  })
+
+  it('cobra IOF quando pedido e permite isentar', () => {
+    const comIof = simular({ ...FORMULARIO_INICIAL, iof: 'cobrar' })
     const isento = simular({ ...FORMULARIO_INICIAL, iof: 'isento' })
     if (!comIof.ok || !isento.ok) throw new Error('simulação inválida')
 

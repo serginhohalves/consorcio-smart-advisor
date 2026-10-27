@@ -1,4 +1,11 @@
-import { calcularCustoHesitacao, ValidationError, type HesitacaoResultado } from '../core'
+import {
+  calcularCustoHesitacao,
+  PARAMETROS_POR_TIPO,
+  ValidationError,
+  type HesitacaoResultado,
+  type TipoConsorcio,
+} from '../core'
+import { formatDecimalBR } from '../shared/formatters'
 import { parseDecimalBR } from '../shared/parsers'
 
 /** Estado do formulário do Custo da Hesitação, como digitado (percentuais em %). */
@@ -10,11 +17,16 @@ export interface FormularioHesitacao {
 
 export type CampoHesitacao = keyof FormularioHesitacao
 
-export const HESITACAO_INICIAL: FormularioHesitacao = {
-  mesesEspera: '12',
-  reajusteAnualBem: '5',
-  rendimentoAnualAplicacao: '10',
+/** Formulário com o reajuste sugerido para o tipo de bem. */
+export function hesitacaoDoTipo(tipo: TipoConsorcio): FormularioHesitacao {
+  return {
+    mesesEspera: '12',
+    reajusteAnualBem: formatDecimalBR(PARAMETROS_POR_TIPO[tipo].reajusteAnualBem * 100),
+    rendimentoAnualAplicacao: '10',
+  }
 }
+
+export const HESITACAO_INICIAL: FormularioHesitacao = hesitacaoDoTipo('imovel')
 
 export type ResultadoHesitacao =
   | { ok: true; resultado: HesitacaoResultado }
