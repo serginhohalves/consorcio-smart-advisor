@@ -15,3 +15,10 @@ export function formatBRL(cents: number): string {
 export function formatPercent(fraction: number): string {
   return percent.format(fraction)
 }
+
+const decimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 })
+
+/** Formata um número como o usuário digitaria (ex.: 300000 -> "300.000", 10.5 -> "10,5"). */
+export function formatDecimalBR(valor: number): string {
+  return decimal.format(valor)
+}

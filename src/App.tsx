@@ -5,13 +5,16 @@ import { Resultado } from './ui/components/Resultado'
 import { TermometroPerfil } from './ui/components/TermometroPerfil'
 import {
   HESITACAO_INICIAL,
+  hesitacaoDoTipo,
   simularHesitacao,
   type CampoHesitacao,
   type FormularioHesitacao,
 } from './ui/hesitacao'
+import type { TipoConsorcio } from './core'
 import { PERFIL_INICIAL, simularPerfil, type FormularioPerfil } from './ui/perfil'
 import {
   FORMULARIO_INICIAL,
+  formularioDoTipo,
   simular,
   type CampoFormulario,
   type FormularioSimulacao as Formulario,
@@ -46,6 +49,10 @@ function App() {
 
   const aoMudar = <C extends CampoFormulario>(campo: C, valor: Formulario[C]) =>
     setForm((atual) => ({ ...atual, [campo]: valor }))
+  const aoMudarTipo = (tipo: TipoConsorcio) => {
+    setForm(formularioDoTipo(tipo))
+    setFormHesitacao(hesitacaoDoTipo(tipo))
+  }
 
   return (
     <main className="mx-auto grid max-w-5xl gap-6 px-4 py-6 sm:py-10">
@@ -62,6 +69,7 @@ function App() {
         <FormularioSimulacao
           form={form}
           aoMudar={aoMudar}
+          aoMudarTipo={aoMudarTipo}
           erro={resultado.ok ? undefined : resultado}
         />
         <div className="grid gap-6">
@@ -77,6 +85,7 @@ function App() {
           )}
           {resultadoHesitacao && (
             <CustoHesitacao
+              tipo={form.tipo}
               form={formHesitacao}
               aoMudar={aoMudarHesitacao}
               resultado={resultadoHesitacao}

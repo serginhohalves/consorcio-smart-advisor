@@ -1,6 +1,7 @@
 import {
   compararSimulacoes,
   IOF_PESSOA_FISICA,
+  PARAMETROS_POR_TIPO,
   simularConsorcio,
   simularFinanciamento,
   toCents,
@@ -10,11 +11,14 @@ import {
   type ConsorcioResultado,
   type FinanciamentoResultado,
   type SistemaAmortizacao,
+  type TipoConsorcio,
 } from '../core'
+import { formatDecimalBR } from '../shared/formatters'
 import { parseDecimalBR } from '../shared/parsers'
 
 /** Estado do formulário como digitado: valores em reais e percentuais (ex.: "15" = 15%). */
 export interface FormularioSimulacao {
+  tipo: TipoConsorcio
   valorCarta: string
   prazoMeses: string
   taxaAdministracao: string
@@ -29,18 +33,25 @@ export interface FormularioSimulacao {
 
 export type CampoFormulario = keyof FormularioSimulacao
 
-export const FORMULARIO_INICIAL: FormularioSimulacao = {
-  valorCarta: '300.000',
-  prazoMeses: '200',
-  taxaAdministracao: '15',
-  fundoReserva: '1',
-  lancePercentual: '30',
-  mesContemplacao: '12',
-  abatimento: 'parcela',
-  taxaJurosAnual: '10,5',
-  sistema: 'price',
-  iof: 'cobrar',
+/** Formulário preenchido com os valores sugeridos para o tipo de consórcio. */
+export function formularioDoTipo(tipo: TipoConsorcio): FormularioSimulacao {
+  const p = PARAMETROS_POR_TIPO[tipo]
+  return {
+    tipo,
+    valorCarta: formatDecimalBR(p.valorCarta / 100),
+    prazoMeses: String(p.prazoMeses),
+    taxaAdministracao: formatDecimalBR(p.taxaAdministracao * 100),
+    fundoReserva: formatDecimalBR(p.fundoReserva * 100),
+    lancePercentual: '30',
+    mesContemplacao: '12',
+    abatimento: 'parcela',
+    taxaJurosAnual: formatDecimalBR(p.taxaJurosAnual * 100),
+    sistema: p.sistema,
+    iof: p.cobraIof ? 'cobrar' : 'isento',
+  }
 }
+
+export const FORMULARIO_INICIAL: FormularioSimulacao = formularioDoTipo('imovel')
 
 export type ResultadoSimulacao =
   | {
@@ -64,6 +75,7 @@ const CAMPO_POR_ERRO: Record<string, CampoFormulario> = {
 }
 
 const MENSAGENS: Record<CampoFormulario, string> = {
+  tipo: 'Escolha imóvel ou veículo.',
   valorCarta: 'Informe um valor de carta maior que zero.',
   prazoMeses: 'Informe um prazo em meses (número inteiro maior que zero).',
   taxaAdministracao: 'A taxa de administração deve estar entre 0% e 100%.',
