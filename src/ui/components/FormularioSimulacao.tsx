@@ -31,6 +31,11 @@ const DICA_IOF: Record<TipoConsorcio, string> = {
   veiculo: 'Pessoa física paga 0,38% + 0,0082% ao dia (até 365 dias), financiado junto.',
 }
 
+const INDICE_REAJUSTE: Record<TipoConsorcio, string> = {
+  imovel: 'Imóveis costumam seguir o INCC.',
+  veiculo: 'Veículos novos costumam seguir o IPCA.',
+}
+
 export function FormularioSimulacao({
   form,
   aoMudar,
@@ -95,6 +100,14 @@ export function FormularioSimulacao({
           aoMudar={(v) => aoMudar('fundoReserva', v)}
           erro={erroDe('fundoReserva')}
         />
+        <CampoNumerico
+          id="mesContemplacao"
+          rotulo="Mês da contemplação"
+          dica="Quando o cliente recebe a carta, com ou sem lance."
+          valor={form.mesContemplacao}
+          aoMudar={(v) => aoMudar('mesContemplacao', v)}
+          erro={erroDe('mesContemplacao')}
+        />
       </Grupo>
 
       <Grupo titulo="Lance com recursos próprios">
@@ -122,13 +135,6 @@ export function FormularioSimulacao({
             </p>
           )}
         </div>
-        <CampoNumerico
-          id="mesContemplacao"
-          rotulo="Mês da contemplação"
-          valor={form.mesContemplacao}
-          aoMudar={(v) => aoMudar('mesContemplacao', v)}
-          erro={erroDe('mesContemplacao')}
-        />
         <Segmentado
           nome="abatimento"
           rotulo="O lance reduz"
@@ -151,6 +157,17 @@ export function FormularioSimulacao({
           aoMudar={(v) => aoMudar('taxaJurosAnual', v)}
           erro={erroDe('taxaJurosAnual')}
         />
+        {form.tipo === 'imovel' && (
+          <CampoNumerico
+            id="trAnual"
+            rotulo="TR estimada"
+            sufixo="% a.a."
+            dica="Opcional. Corrige o saldo devedor todo mês, como no SFH."
+            valor={form.trAnual}
+            aoMudar={(v) => aoMudar('trAnual', v)}
+            erro={erroDe('trAnual')}
+          />
+        )}
         <Segmentado
           nome="sistema"
           rotulo="Sistema de amortização"
@@ -174,6 +191,27 @@ export function FormularioSimulacao({
           />
           <p className="text-xs text-suave">{DICA_IOF[form.tipo]}</p>
         </div>
+      </Grupo>
+
+      <Grupo titulo="Premissas">
+        <CampoNumerico
+          id="reajusteAnual"
+          rotulo="Reajuste anual do bem"
+          sufixo="% a.a."
+          dica={`Corrige a carta e as parcelas do consórcio a cada 12 meses. ${INDICE_REAJUSTE[form.tipo]}`}
+          valor={form.reajusteAnual}
+          aoMudar={(v) => aoMudar('reajusteAnual', v)}
+          erro={erroDe('reajusteAnual')}
+        />
+        <CampoNumerico
+          id="rendimentoAnual"
+          rotulo="Rendimento líquido da aplicação"
+          sufixo="% a.a."
+          dica="Quanto o dinheiro do cliente renderia aplicado. Usado para trazer os valores a valor presente."
+          valor={form.rendimentoAnual}
+          aoMudar={(v) => aoMudar('rendimentoAnual', v)}
+          erro={erroDe('rendimentoAnual')}
+        />
       </Grupo>
     </form>
   )

@@ -143,3 +143,39 @@ describe('simularFinanciamento com IOF financiado', () => {
     expect(r.custoTotal).toBe(r.totalPago - 12_000_000)
   })
 })
+
+describe('simularFinanciamento com TR', () => {
+  const entrada = {
+    valorFinanciado: 10_000_000,
+    prazoMeses: 120,
+    taxaJurosAnual: 0.1,
+  }
+
+  it.each(['price', 'sac'] as const)(
+    '%s: corrige o saldo e quita tudo na última parcela',
+    (sistema) => {
+      const r = simularFinanciamento({ ...entrada, sistema, trAnual: 0.02 })
+      const amortizado = r.parcelas.reduce((acc, p) => acc + p.amortizacao, 0)
+
+      expect(r.totalCorrecao).toBeGreaterThan(0)
+      expect(amortizado).toBe(r.valorTotalFinanciado + r.totalCorrecao)
+      expect(r.parcelas.at(-1)?.saldoDevedor).toBe(0)
+      expect(r.custoTotal).toBe(r.totalJuros + r.totalCorrecao + r.iof)
+    },
+  )
+
+  it('custa mais que o mesmo financiamento sem TR', () => {
+    const semTr = simularFinanciamento({ ...entrada, sistema: 'price' })
+    const comTr = simularFinanciamento({ ...entrada, sistema: 'price', trAnual: 0.02 })
+
+    expect(semTr.totalCorrecao).toBe(0)
+    expect(comTr.custoTotal).toBeGreaterThan(semTr.custoTotal)
+    expect(comTr.ultimaParcela).toBeGreaterThan(comTr.primeiraParcela)
+  })
+
+  it('rejeita TR negativa', () => {
+    expect(() => simularFinanciamento({ ...entrada, sistema: 'sac', trAnual: -0.01 })).toThrow(
+      expect.objectContaining({ field: 'trAnual' }),
+    )
+  })
+})

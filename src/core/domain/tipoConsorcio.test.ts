@@ -12,6 +12,8 @@ describe('PARAMETROS_POR_TIPO', () => {
         prazoMeses: p.prazoMeses,
         taxaAdministracao: p.taxaAdministracao,
         fundoReserva: p.fundoReserva,
+        mesContemplacao: 12,
+        reajusteAnual: p.reajusteAnualBem,
       }),
     ).not.toThrow()
     expect(() =>

@@ -42,7 +42,7 @@ export function simularPerfil(
   const resultado = analisarPerfil({
     urgencia: form.urgencia,
     objetivo: form.objetivo,
-    economiaPercentual: comparativo.economiaPercentual,
+    economiaPercentual: comparativo.valorPresente.economiaPercentual,
     lancePercentual: entrada / consorcio.valorCarta,
     comprometimentoRenda,
   })

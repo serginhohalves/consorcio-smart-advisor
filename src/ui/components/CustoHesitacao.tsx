@@ -1,18 +1,14 @@
-import type { TipoConsorcio } from '../../core'
-import { formatBRL } from '../../shared/formatters'
-import type { CampoHesitacao, FormularioHesitacao, ResultadoHesitacao } from '../hesitacao'
+import { formatBRL, formatDecimalBR } from '../../shared/formatters'
+import type {
+  CampoHesitacao,
+  FormularioHesitacao,
+  PremissasHesitacao,
+  ResultadoHesitacao,
+} from '../hesitacao'
 import { CampoNumerico } from './CampoNumerico'
 
-const TEXTO_POR_TIPO: Record<TipoConsorcio, { rotulo: string; referencia: string }> = {
-  imovel: { rotulo: 'Reajuste do imóvel', referencia: 'Imóveis costumam acompanhar o INCC.' },
-  veiculo: {
-    rotulo: 'Reajuste do veículo',
-    referencia: 'O preço do veículo novo costuma acompanhar o IPCA.',
-  },
-}
-
 interface CustoHesitacaoProps {
-  tipo: TipoConsorcio
+  premissas: PremissasHesitacao
   form: FormularioHesitacao
   aoMudar: (campo: CampoHesitacao, valor: string) => void
   resultado: ResultadoHesitacao
@@ -20,7 +16,7 @@ interface CustoHesitacaoProps {
 }
 
 export function CustoHesitacao({
-  tipo,
+  premissas,
   form,
   aoMudar,
   resultado,
@@ -30,16 +26,17 @@ export function CustoHesitacao({
     !resultado.ok && resultado.campo === campo ? resultado.mensagem : undefined
   const r = resultado.ok ? resultado.resultado : null
   const meses = form.mesesEspera
-  const texto = TEXTO_POR_TIPO[tipo]
 
   return (
     <section className="grid gap-4 rounded-xl border border-linha bg-superficie p-5">
       <div className="grid gap-1">
         <h2 className="font-display text-lg font-semibold">Custo da hesitação</h2>
         <p className="text-sm text-suave">
-          Quanto o cliente perde se adiar a compra: o reajuste do bem, menos o que os recursos
-          próprios ({formatBRL(recursosProprios)}) renderiam aplicados durante a espera.{' '}
-          {texto.referencia}
+          Quanto o cliente perde se adiar a compra: o reajuste do bem (
+          {formatDecimalBR(premissas.reajusteAnualBem * 100)}% a.a.), menos o que os recursos
+          próprios ({formatBRL(recursosProprios)}) renderiam aplicados a{' '}
+          {formatDecimalBR(premissas.rendimentoAnualAplicacao * 100)}% a.a. durante a espera. As
+          taxas vêm das premissas da simulação.
         </p>
       </div>
 
@@ -51,22 +48,6 @@ export function CustoHesitacao({
           valor={form.mesesEspera}
           aoMudar={(v) => aoMudar('mesesEspera', v)}
           erro={erroDe('mesesEspera')}
-        />
-        <CampoNumerico
-          id="reajusteAnualBem"
-          rotulo={texto.rotulo}
-          sufixo="% a.a."
-          valor={form.reajusteAnualBem}
-          aoMudar={(v) => aoMudar('reajusteAnualBem', v)}
-          erro={erroDe('reajusteAnualBem')}
-        />
-        <CampoNumerico
-          id="rendimentoAnualAplicacao"
-          rotulo="Rendimento líquido"
-          sufixo="% a.a."
-          valor={form.rendimentoAnualAplicacao}
-          aoMudar={(v) => aoMudar('rendimentoAnualAplicacao', v)}
-          erro={erroDe('rendimentoAnualAplicacao')}
         />
       </div>
 

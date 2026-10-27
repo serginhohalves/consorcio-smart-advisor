@@ -6,7 +6,7 @@ export type CriterioPerfil = 'urgencia' | 'economia' | 'lance' | 'objetivo' | 'r
 export interface PerfilInput {
   urgencia: Urgencia
   objetivo: Objetivo
-  /** Economia do consórcio como fração do custo do financiamento. */
+  /** Economia do consórcio em valor presente, como fração do valor da carta. */
   economiaPercentual: number
   /** Lance como fração do valor da carta. */
   lancePercentual: number
@@ -51,8 +51,8 @@ export const NOTA_OBJETIVO: Record<Objetivo, number> = {
   imediata: 30,
 }
 
-/** Economia a partir da qual a nota é máxima. */
-export const ECONOMIA_NOTA_MAXIMA = 0.5
+/** Economia em valor presente, como fração da carta, a partir da qual a nota é máxima. */
+export const ECONOMIA_NOTA_MAXIMA = 0.15
 /** Lance a partir do qual a nota é máxima, e a nota de quem não dá lance. */
 export const LANCE_NOTA_MAXIMA = 0.3
 export const LANCE_NOTA_MINIMA = 20

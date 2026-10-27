@@ -5,7 +5,7 @@ import { analisarPerfil, faixaDoScore } from './analisarPerfil'
 const ideal: PerfilInput = {
   urgencia: 'mais1ano',
   objetivo: 'planejamento',
-  economiaPercentual: 0.8,
+  economiaPercentual: 0.3,
   lancePercentual: 0.3,
   comprometimentoRenda: 0.15,
 }
@@ -42,7 +42,7 @@ describe('analisarPerfil', () => {
       ...ideal,
       urgencia: 'ate1ano', // 50 x 30% = 15
       objetivo: 'upgrade', // 70 x 15% = 10,5
-      economiaPercentual: 0.25, // 50 x 25% = 12,5
+      economiaPercentual: 0.075, // 50 x 25% = 12,5
       lancePercentual: 0.15, // 60 x 20% = 12
       comprometimentoRenda: 0.275, // 50 x 10% = 5
     })
